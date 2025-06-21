@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Indovina il Personaggio Steam</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      max-width: 700px;
+      margin: 30px auto;
+      padding: 20px;
+      border-radius: 10px;
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    #question {
+      font-size: 1.2rem;
+      margin: 20px 0;
+      min-height: 60px;
+    }
+    button {
+      font-size: 1rem;
+      padding: 10px 25px;
+      margin: 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      background-color: #4CAF50;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #result {
+      margin-top: 30px;
+      font-weight: bold;
+      font-size: 1.3rem;
+      color: #222;
+      text-align: center;
+    }
+    #restartBtn {
+      display: none;
+      background-color: #2196F3;
+      margin-top: 20px;
+    }
+    #restartBtn:hover {
+      background-color: #0b7dda;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      columns: 2;
+    }
+    li {
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Schermata iniziale -->
+<div id="startScreen">
+  <h1>Indovina il Personaggio Steam</h1>
+  <p>Scegli un personaggio dalla lista seguente e poi clicca su <strong>Inizia</strong>.</p>
+  <ul id="characterList"></ul>
+  <div style="text-align:center;">
+    <button onclick="startGame()">Inizia</button>
+  </div>
+</div>
+
+<!-- Gioco -->
+<div id="gameScreen" style="display:none;">
+  <h1>Indovina il Personaggio Steam</h1>
+  <p>Pensa al personaggio e rispondi alle domande con <strong>Sì</strong> o <strong>No</strong>.</p>
+
+  <div id="question"></div>
+  <div style="text-align:center;">
+    <button id="yesBtn">Sì</button>
+    <button id="noBtn">No</button>
+  </div>
+
+  <div id="result"></div>
+  <div style="text-align:center;">
+    <button id="restartBtn">Ricomincia</button>
+  </div>
+</div>
+
+<script>
+// Lista personaggi con attributi
+const characters = [
+  {name: "Carl CJ Johnson", gta: true, male: true, game: "San Andreas", fantasy: false},
+  {name: "Trevor Philips", gta: true, male: true, game: "GTA V", fantasy: false},
+  {name: "Michael De Santa", gta: true, male: true, game: "GTA V", fantasy: false},
+  {name: "Franklin Clinton", gta: true, male: true, game: "GTA V", fantasy: false},
+  {name: "Niko Bellic", gta: true, male: true, game: "GTA IV", fantasy: false},
+  {name: "Tommy Vercetti", gta: true, male: true, game: "Vice City", fantasy: false},
+  {name: "Claude Speed", gta: true, male: true, game: "GTA III", fantasy: false},
+  {name: "Geralt di Rivia", gta: false, male: true, game: "The Witcher 3", fantasy: true},
+  {name: "Gordon Freeman", gta: false, male: true, game: "Half-Life", fantasy: false},
+  {name: "Doom Slayer", gta: false, male: true, game: "DOOM Eternal", fantasy: false},
+  {name: "V", gta: false, male: null, game: "Cyberpunk 2077", fantasy: false},
+  {name: "Alyx Vance", gta: false, male: false, game: "Half-Life: Alyx", fantasy: false},
+  {name: "The Knight", gta: false, male: null, game: "Hollow Knight", fantasy: true},
+  {name: "Isaac Clarke", gta: false, male: true, game: "Dead Space", fantasy: false},
+  {name: "Lara Croft", gta: false, male: false, game: "Tomb Raider", fantasy: false},
+  {name: "Agent 47", gta: false, male: true, game: "HITMAN 3", fantasy: false},
+  {name: "Arthur Morgan", gta: false, male: true, game: "Red Dead Redemption 2", fantasy: false},
+  {name: "The Tarnished", gta: false, male: null, game: "Elden Ring", fantasy: true},
+  {name: "Freddy Fazbear", gta: false, male: null, game: "Five Nights at Freddy’s", fantasy: true},
+  {name: "Joel", gta: false, male: true, game: "The Last of Us Part I", fantasy: false},
+];
+
+// Attributi su cui basarsi per le domande
+const attributes = ["gta", "male", "fantasy"];
+const attributeText = {
+  gta: "Il personaggio è di GTA?",
+  male: "Il personaggio è maschio?",
+  fantasy: "Il gioco è fantasy?"
+};
+
+let filteredCharacters = [];
+let remainingAttributes = [];
+let currentAttribute = "";
+
+const questionDiv = document.getElementById("question");
+const yesBtn = document.getElementById("yesBtn");
+const noBtn = document.getElementById("noBtn");
+const resultDiv = document.getElementById("result");
+const restartBtn = document.getElementById("restartBtn");
+
+function startGame() {
+  document.getElementById("startScreen").style.display = "none";
+  document.getElementById("gameScreen").style.display = "block";
+  filteredCharacters = [...characters];
+  remainingAttributes = [...attributes];
+  resultDiv.innerText = "";
+  restartBtn.style.display = "none";
+  yesBtn.style.display = "inline-block";
+  noBtn.style.display = "inline-block";
+  askNextQuestion();
+}
+
+// Chiede la prossima domanda disponibile
+function askNextQuestion() {
+  if (filteredCharacters.length === 1) {
+    showResult();
+    return;
+  }
+
+  // Se non ci sono più attributi per filtrare
+  if (remainingAttributes.length === 0) {
+    questionDiv.innerText = "Possibili personaggi:";
+    resultDiv.innerText = filteredCharacters.map(c => c.name).join(", ");
+    yesBtn.style.display = "none";
+    noBtn.style.display = "none";
+    restartBtn.style.display = "inline-block";
+    return;
+  }
+
+  // Scegli il prossimo attributo da chiedere
+  currentAttribute = remainingAttributes.shift();
+  questionDiv.innerText = attributeText[currentAttribute];
+  resultDiv.innerText = "";
+}
+
+function showResult() {
+  questionDiv.innerText = "Penso che il personaggio sia:";
+  resultDiv.innerText = filteredCharacters[0].name;
+  yesBtn.style.display = "none";
+  noBtn.style.display = "none";
+  restartBtn.style.display = "inline-block";
+}
+
+function answer(isYes) {
+  filteredCharacters = filteredCharacters.filter(char => {
+    if (char[currentAttribute] === null) return true;
+    return isYes ? char[currentAttribute] === true : char[currentAttribute] === false;
+  });
+  askNextQuestion();
+}
+
+yesBtn.addEventListener("click", () => answer(true));
+noBtn.addEventListener("click", () => answer(false));
+restartBtn.addEventListener("click", () => {
+  location.reload();
+});
+
+// Popola la lista iniziale dei personaggi
+const characterList = document.getElementById("characterList");
+characters.forEach(c => {
+  const li = document.createElement("li");
+  li.textContent = c.name + " (" + c.game + ")";
+  characterList.appendChild(li);
+});
+</script>
+
+</body>
+</html>
