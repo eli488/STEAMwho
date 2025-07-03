@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Indovina il Personaggio STEAM</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: auto; padding: 20px; background-color: #f0f0f0; }
+    h1 { text-align: center; color: #333; }
+    .character-list { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+    .character { padding: 10px 15px; background: #fff; border: 1px solid #ccc; border-radius: 5px; }
+    #game, #result { margin-top: 20px; }
+    #question { font-size: 18px; margin-bottom: 20px; }
+    .btn { padding: 10px 20px; font-size: 16px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; }
+    .yes { background-color: #28a745; color: white; }
+    .no { background-color: #dc3545; color: white; }
+    .btn:hover { opacity: 0.9; }
+  </style>
+</head>
+<body>
+
+  <h1>🎓 Indovina il Personaggio STEAM</h1>
+
+  <div id="intro">
+    <p><strong>Pensa a uno di questi personaggi:</strong></p>
+    <div class="character-list" id="characterList"></div>
+    <button onclick="startGame()">Inizia il gioco</button>
+  </div>
+
+  <div id="game" style="display:none;">
+    <p id="question"></p>
+    <button class="btn yes" onclick="answer(true)">Sì</button>
+    <button class="btn no" onclick="answer(false)">No</button>
+  </div>
+
+  <div id="result" style="display:none;"></div>
+
+  <script>
+    const characters = [
+      { name: "Albert Einstein", female: false, modern: false, science: true, tech: false, art: false, math: true, engineer: false, european: true, american: false, medicine: false, nobel: true, software: false, ai: false, ancient: false, humanitarian: true },
+      { name: "Marie Curie", female: true, modern: false, science: true, tech: false, art: false, math: true, engineer: false, european: true, american: false, medicine: true, nobel: true, software: false, ai: false, ancient: false, humanitarian: true },
+      { name: "Galileo Galilei", female: false, modern: false, science: true, tech: false, art: false, math: true, engineer: true, european: true, american: false, medicine: false, nobel: false, software: false, ai: false, ancient: true, humanitarian: false },
+      { name: "Stephen Hawking", female: false, modern: true, science: true, tech: false, art: false, math: true, engineer: false, european: true, american: false, medicine: false, nobel: false, software: false, ai: true, ancient: false, humanitarian: true },
+      { name: "Rosalind Franklin", female: true, modern: true, science: true, tech: false, art: false, math: false, engineer: false, european: true, american: false, medicine: true, nobel: false, software: false, ai: false, ancient: false, humanitarian: true },
+      { name: "Alan Turing", female: false, modern: false, science: false, tech: true, art: false, math: true, engineer: false, european: true, american: false, medicine: false, nobel: false, software: true, ai: true, ancient: false, humanitarian: false },
+      { name: "Ada Lovelace", female: true, modern: false, science: false, tech: true, art: false, math: true, engineer: false, european: true, american: false, medicine: false, nobel: false, software: true, ai: false, ancient: true, humanitarian: false },
+      { name: "Tim Berners-Lee", female: false, modern: true, science: false, tech: true, art: false, math: false, engineer: false, european: true, american: false, medicine: false, nobel: false, software: true, ai: false, ancient: false, humanitarian: true },
+      { name: "Margaret Hamilton", female: true, modern: true, science: false, tech: true, art: false, math: true, engineer: false, european: false, american: true, medicine: false, nobel: false, software: true, ai: false, ancient: false, humanitarian: false },
+      { name: "Steve Jobs", female: false, modern: true, science: false, tech: true, art: true, math: false, engineer: true, european: false, american: true, medicine: false, nobel: false, software: true, ai: true, ancient: false, humanitarian: false },
+      { name: "Nikola Tesla", female: false, modern: false, science: true, tech: true, art: false, math: true, engineer: true, european: true, american: false, medicine: false, nobel: false, software: false, ai: false, ancient: false, humanitarian: false },
+      { name: "Elon Musk", female: false, modern: true, science: false, tech: true, art: false, math: false, engineer: true, european: false, american: true, medicine: false, nobel: false, software: true, ai: true, ancient: false, humanitarian: false },
+      { name: "Leonardo da Vinci", female: false, modern: false, science: true, tech: false, art: true, math: true, engineer: true, european: true, american: false, medicine: true, nobel: false, software: false, ai: false, ancient: true, humanitarian: true },
+      { name: "Guglielmo Marconi", female: false, modern: false, science: false, tech: true, art: false, math: false, engineer: true, european: true, american: false, medicine: false, nobel: true, software: false, ai: false, ancient: false, humanitarian: false },
+      { name: "Frida Kahlo", female: true, modern: false, science: false, tech: false, art: true, math: false, engineer: false, european: false, american: true, medicine: false, nobel: false, software: false, ai: false, ancient: false, humanitarian: false },
+      { name: "Vincent van Gogh", female: false, modern: false, science: false, tech: false, art: true, math: false, engineer: false, european: true, american: false, medicine: false, nobel: false, software: false, ai: false, ancient: false, humanitarian: false },
+      { name: "Michelangelo Buonarroti", female: false, modern: false, science: false, tech: false, art: true, math: false, engineer: true, european: true, american: false, medicine: false, nobel: false, software: false, ai: false, ancient: true, humanitarian: false },
+      { name: "Pitagora", female: false, modern: false, science: true, tech: false, art: false, math: true, engineer: false, european: true, american: false, medicine: false, nobel: false, software: false, ai: false, ancient: true, humanitarian: false },
+      { name: "Katherine Johnson", female: true, modern: true, science: true, tech: true, art: false, math: true, engineer: false, european: false, american: true, medicine: false, nobel: false, software: true, ai: false, ancient: false, humanitarian: true },
+      { name: "Grace Hopper", female: true, modern: true, science: false, tech: true, art: false, math: true, engineer: false, european: false, american: true, medicine: false, nobel: false, software: true, ai: false, ancient: false, humanitarian: false }
+    ];
+
+    const questions = [
+      { text: "Il personaggio è una donna?", property: "female" },
+      { text: "È vissuto dopo il 1900?", property: "modern" },
+      { text: "Ha lavorato nel campo della scienza?", property: "science" },
+      { text: "Ha lavorato nella tecnologia?", property: "tech" },
+      { text: "È famoso per le sue competenze artistiche?", property: "art" },
+      { text: "Si è occupato di matematica?", property: "math" },
+      { text: "È stato un ingegnere o inventore?", property: "engineer" },
+      { text: "È europeo?", property: "european" },
+      { text: "È americano?", property: "american" },
+      { text: "Ha lavorato nel campo della medicina o salute?", property: "medicine" },
+      { text: "Ha ricevuto il premio Nobel?", property: "nobel" },
+      { text: "Ha contribuito allo sviluppo del software o della programmazione?", property: "software" },
+      { text: "Ha lavorato in intelligenza artificiale o informatica teorica?", property: "ai" },
+      { text: "È vissuto prima del 1800?", property: "ancient" },
+      { text: "Il suo lavoro ha avuto un forte impatto umanitario o sociale?", property: "humanitarian" }
+    ];
+
+    let remaining = [...characters];
+    let currentQuestion = 0;
+
+    function startGame() {
+      document.getElementById("intro").style.display = "none";
+      document.getElementById("game").style.display = "block";
+      askQuestion();
+    }
+
+    function askQuestion() {
+      if (remaining.length === 1) {
+        showResult(`🎉 Il tuo personaggio è: <strong>${remaining[0].name}</strong>!`);
+        return;
+      }
+      if (remaining.length === 0) {
+        showResult("😥 Non sono riuscito ad individuare il tuo personaggio.");
+        return;
+      }
+      if (currentQuestion >= questions.length) {
+        const names = remaining.map(p => p.name).join(", ");
+        showResult(`🤔 Non sono sicuro. Forse uno di questi: <strong>${names}</strong>`);
+        return;
+      }
+      const q = questions[currentQuestion];
+      document.getElementById("question").textContent = q.text;
+    }
+
+    function answer(isYes) {
+      const prop = questions[currentQuestion].property;
+      remaining = remaining.filter(p => Boolean(p[prop]) === isYes);
+      currentQuestion++;
+      askQuestion();
+    }
+
+    function showResult(message) {
+      document.getElementById("game").style.display = "none";
+      const result = document.getElementById("result");
+      result.innerHTML = `<p>${message}</p><button onclick="restart()">Ricomincia</button>`;
+      result.style.display = "block";
+    }
+
+    function restart() {
+      remaining = [...characters];
+      currentQuestion = 0;
+      document.getElementById("result").style.display = "none";
+      document.getElementById("intro").style.display = "block";
+    }
+
+    window.onload = () => {
+      const list = document.getElementById("characterList");
+      characters.forEach(c => {
+        const el = document.createElement("div");
+        el.className = "character";
+        el.textContent = c.name;
+        list.appendChild(el);
+      });
+    };
+  </script>
+
+</body>
+</html>
